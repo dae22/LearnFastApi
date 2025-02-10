@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from models.models import User
+from models.models import Feedback
+
 
 app = FastAPI()
 
-class User(BaseModel):
-    username: str
-    message: str
+fake_db = []
 
-@app.post("/")
-async def root(user: User):
-    print(f'Мы получили от юзера {user.username} такое сообщение: {user.message}')
+@app.post('/feedback')
+def add_feedback(feedback: Feedback):
+    fake_db.append(feedback)
+    return {"message": "Feedback added"}
