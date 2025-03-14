@@ -1,34 +1,40 @@
-from fastapi import FastAPI, HTTPException, Depends
-from models.models import User
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
+from fastapi import FastAPI
+from models.models import Todo
+import sqlite3
+from database import get_db_connection
 
 
 app = FastAPI()
-security = HTTPBasic()
 
+@app.post("/todos")
+def create_item(todo: Todo):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO items (title, description, completed) VALUES ($2, $3, $4)", todo.title, todo.description, todo.completed)
+    conn.commit()
+    conn.close()
+    return {"message": "Item added successfully!"}
 
-fake_db: list[User] = [User(username='user123', password='password123'),
-                       User(username="dae22", password="Boston")]
+@app.get("/todos/{todo_id}")
+def read_item(todo_id: int):
+    conn = get_db_connection()
+    row = conn.execute("SELECT * FROM todo.todo WHERE id=$1", todo_id)
+    conn.close()
+    return row
 
+@app.put("/{id}")
+def update_item(todo_id: int, todo: Todo):
+    conn = get_db_connection()
+    conn.execute("UPDATE todo.todo SET $2, $3, $4 WHERE id=$1", todo_id, todo.title, todo.description, todo.completed )
+    row = conn.execute("SELECT * FROM todo.todo WHERE id=$1", todo_id)
+    conn.close()
+    return row
 
-def auth(credentials: HTTPBasicCredentials = Depends(security)):
-    user = get_user(credentials.username)
-    if user is None or user.password != credentials.password:
-        raise HTTPException(status_code=401, detail="You pick the wrong house, Fool", headers={"WWW-Authenticate": "Basic"})
-    return user
-
-def get_user(username: str):
-    for user in fake_db:
-        if user.username == username:
-            return user
-    return None
-
-
-@app.get('/login')
-def login(user: User = Depends(auth)):
-    return {"message": "You got my secret, welcome"}
-
-
-
+@app.delete("/todos/{todo_id}")
+def delete_item(todo_id: int):
+    conn = get_db_connection()
+    conn.execute("DELETE todo.todo WHERE id=$1", todo_id)
+    return {"message": "Item deleted"}
 
 
