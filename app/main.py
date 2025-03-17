@@ -1,11 +1,14 @@
-
 from fastapi import FastAPI
 from models.models import Todo
 import sqlite3
 from database import get_db_connection
+from fastapi import FastAPI, Cookie, Response, HTTPException
+from uuid import uuid1
+from models.models import User
 
 
 app = FastAPI()
+
 
 @app.post("/todos")
 def create_item(todo: Todo):
@@ -36,5 +39,21 @@ def delete_item(todo_id: int):
     conn = get_db_connection()
     conn.execute("DELETE todo.todo WHERE id=$1", todo_id)
     return {"message": "Item deleted"}
+
+fake_db: list[User] = [User(username='user123', password='password123'),
+                       User(username="dae22", password="yanedyrak"),
+                       User(username="Noigu", password="hoyopo")]
+sessions: dict = {}
+
+
+@app.get('/login')
+async def login(user: User, response: Response):
+    for person in fake_db:
+        if person.username == user.username and person.password == user.password:
+            return {"message": "You got my secret, welcome"}
+        raise HTTPException(status_code=401)
+
+
+
 
 
