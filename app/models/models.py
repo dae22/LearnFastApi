@@ -1,5 +1,4 @@
-from pydantic import BaseModel, UUID4
-from typing import Optional
+from pydantic import BaseModel\
 
 
 class Todo(BaseModel):
@@ -7,9 +6,3 @@ class Todo(BaseModel):
     description: str
     completed: str = 'false'
 
-from pydantic import BaseModel
-import uuid
-
-class User(BaseModel):
-    username: str
-    password: str

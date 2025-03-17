@@ -15,9 +15,9 @@ def get_db_connection():
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL
-    description TEXT NOT NULL
-    completed TEXT
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    completed TEXT NOT NULL
 )
 """)
 
