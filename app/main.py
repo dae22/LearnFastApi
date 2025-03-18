@@ -1,46 +1,42 @@
-from models.models import Todo
-import sqlite3
-from database import get_db_connection
-from fastapi import FastAPI
-
+from fastapi import FastAPI, HTTPException
+from databases import Database
+from models.models import UserCreate, UserReturn
 
 app = FastAPI()
 
+DATABASE_URL = "postgresql://dae22:1998@localhost/mydatabase"
 
-@app.post("/todos")
-def create_item(todo: Todo):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO items (title, description, completed) VALUES ($1, $2, $3)", (todo.title, todo.description, todo.completed))
-    last_id = cursor.lastrowid
-    row = cursor.execute("SELECT * FROM items WHERE id=?", (last_id,))
-    conn.commit()
-    conn.close()
-    return row
-
-@app.get("/todos/{todo_id}")
-def read_item(todo_id: int):
-    conn = get_db_connection()
-    row = conn.execute("SELECT * FROM items WHERE id=$1", todo_id)
-    conn.close()
-    return row
-
-@app.put("/{id}")
-def update_item(todo_id: int, todo: Todo):
-    conn = get_db_connection()
-    conn.execute("UPDATE items SET $2, $3, $4 WHERE id=$1", (todo_id, todo.title, todo.description, todo.completed))
-    row = conn.execute("SELECT * FROM items WHERE id=$1", (todo_id,))
-    conn.close()
-    return row
-
-@app.delete("/todos/{todo_id}")
-def delete_item(todo_id: int):
-    conn = get_db_connection()
-    conn.execute("DELETE items WHERE id=$1", (todo_id,))
-    return {"message": "Item deleted"}
+database = Database(DATABASE_URL)
 
 
+@app.on_event("startup")
+async def startup_database():
+    await database.connect()
+
+@app.on_event("shutdown")
+async def shutdown_database():
+    await database.disconnect()
 
 
+@app.post("/users/", response_model=UserReturn)
+async def create_user(user: UserCreate):
+    query = "INSERT INTO users (username, email) VALUES (:username, :email) RETURNING id"
+    values = {"username": user.username, "email": user.email}
+    try:
+        user_id = await database.execute(query=query, values=values)
+        return {**user.dict(), "id": user_id}
+    except:
+        raise HTTPException(status_code=500, detail="Failed to create user")
 
-
+@app.get("/users/{user_id}", response_model=UserReturn)
+async def get_user(user_id: int):
+    query = "SELECT * FROM users WHERE id=:user_id"
+    values = {"user_id": user_id}
+    try:
+        result = await database.fetch_one(query=query, values=values)
+    except:
+        raise HTTPException(status_code=500, detail="Failed to get user from database")
+    if result:
+        return UserReturn(username=result["username"], email=result["email"], id=user_id)
+    else:
+        raise HTTPException(status_code=404, detail="User not found")

@@ -1,25 +1,10 @@
-import sqlite3
+import asyncpg
 
-DB_NAME = ("database.sqlite")
+DATABASE_URL = "postgresql://dae22:1998@localhost/mydatabase"
 
-conn = sqlite3.connect(DB_NAME)
-cursor = conn.cursor()
-
-
-def get_db_connection():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    completed TEXT NOT NULL
-)
-""")
-
-conn.commit()
-conn.close()
+async def get_db_connection():
+    conn = await asyncpg.connect(DATABASE_URL)
+    try:
+        yield conn
+    finally:
+        await conn.close()
