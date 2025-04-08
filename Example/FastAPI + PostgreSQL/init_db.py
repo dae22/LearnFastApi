@@ -8,9 +8,7 @@ async def create_table():
     await conn.execute('''
         CREATE TABLE IF NOT EXISTS items (
             id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            description TEXT NOT NULL,
-            completed TEXT NOT NULL
+            name TEXT NOT NULL
         )
     ''')
     await conn.close()
