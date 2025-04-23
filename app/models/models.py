@@ -1,12 +1,10 @@
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
-class Base(DeclarativeBase):
-    pass
 
-class User(Base):
-    __tablename__ = 'users'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), nullable=False)
-    email: Mapped[str] = mapped_column(String(50), nullable=False)
+class User(BaseModel):
+    username: str
+    age: int = Field(gt=18)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=16)
+    phone: Optional[str] = 'Unknown'

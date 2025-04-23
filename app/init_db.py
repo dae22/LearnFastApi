@@ -6,11 +6,13 @@ DATABASE_URL = "postgresql://dae22:1998@localhost/mydatabase"
 async def create_table():
     conn = await asyncpg.connect(DATABASE_URL)
     await conn.execute('''
-        CREATE TABLE IF NOT EXISTS items (
+        CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            completed TEXT NOT NULL
+            username TEXT NOT NULL,
+            age INTEGER NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL,
+            phone TEXT NOT NULL
         )
     ''')
     await conn.close()
