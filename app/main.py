@@ -1,8 +1,5 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from databases import Database
-from models.models import *
 
 app = FastAPI()
 
