@@ -1,28 +1,35 @@
-def test_calculate_sum(client):
-    # Тест 1: валидные входные данные
-    response = client.get("/sum/", params={"a": 5, "b": 10})
-    assert response.status_code == 200
-    assert response.json() == {"result": 15}
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app, DATABASE_URL
+from databases import Database
 
-    # Тест 2: отрицательные числа
-    response = client.get("/sum/", params={"a": -8, "b": -3})
-    assert response.status_code == 200
-    assert response.json() == {"result": -11}
+client = TestClient(app)
 
-    # Тест 3: ноль и положительное число
-    response = client.get("/sum/", params={"a": 0, "b": 7})
-    assert response.status_code == 200
-    assert response.json() == {"result": 7}
+@pytest.mark.asyncio
+@pytest.fixture(scope="session", autouse=True)
+async def setup_database():
+    db = Database(DATABASE_URL)
+    await db.connect()
+    await db.execute(
+        """ CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        ) """
+    )
+    yield
+    await db.execute("DROP TABLE IF EXISTS users;")
+    await db.disconnect()
 
-    # Тест 4: одно число не введено
-    response = client.get("/sum/", params={"a": 3})
-    assert response.status_code == 422
-    assert response.json() == {
-        "detail": [
-            {
-                "loc": ["query", "b"],
-                "msg": "field required",
-                "type": "value_error.missing"
-            }
-        ]
+
+@pytest.mark.asyncio
+async def test_registration(setup_database):
+    user = {
+        "username": "dae22",
+        "email": "dae-22@mail.ru",
+        "password": "durilka22"
     }
+    response = client.post("/registration", json=user)
+    assert response.status_code == 200
+    assert response.json() == {"result": {"message": "Регистрация прошла успешно"}}

@@ -9,10 +9,8 @@ async def create_table():
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username TEXT NOT NULL,
-            age INTEGER NOT NULL,
             email TEXT NOT NULL,
-            password TEXT NOT NULL,
-            phone TEXT NOT NULL
+            password TEXT NOT NULL
         )
     ''')
     await conn.close()
